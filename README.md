@@ -120,3 +120,133 @@ public class Student {
 	}
 }
 ```
+## 什麼是sessionfactory?
+>參考網址：https://cloud.tencent.com/developer/article/1512351
+>
+>SessionFactory接口負責初始化Hibernate。它充當數據存儲源的代理，並負責創建Session對象。這裡用到了工廠模式。需要注意的是SessionFactory並不是輕量級的，因為一般情況下，一個項目通常只需要一個SessionFactory就夠，當需要操作多個數據庫時，可以為每個數據庫指定一個SessionFactory。
+
+## 什麼是Session?
+>參考網址：https://cloud.tencent.com/developer/article/1512351
+>
+>是用來表示，應用程序和數據庫的一次交互（會話）。在這個Session中，包含了一般的持久化方法（CRUD），Session是一個輕量級對象（線程不安全），通常將每個Session實例和一個數據庫事務綁定，也就是每執行一個數據庫事務，都應該先創建一個新的Session實例，在使用Session後，還需要關閉Session。
+
+**hibernate.cfg.xml資料庫預設找尋的配置檔案**
+```
+<hibernate-configuration>
+
+    <session-factory>
+
+        <!-- JDBC Database connection settings -->
+        <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="connection.url">jdbc:mysql://localhost:3306/hb_student_tracker?useSSL=false&amp;serverTimezone=UTC</property>
+        <property name="connection.username">hbstudent</property>
+        <property name="connection.password">hbstudent</property>
+
+        <!-- JDBC connection pool settings ... using built-in test pool -->
+        <property name="connection.pool_size">1</property>
+
+        <!-- Select our SQL dialect -->
+        <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Echo the SQL to stdout -->
+        <property name="show_sql">true</property>
+
+		<!-- Set the current session context -->
+		<property name="current_session_context_class">thread</property>
+ 
+    </session-factory>
+
+</hibernate-configuration>
+```
+
+## Hibernate基礎CRUD操作演示
+**Creating and Saving Java Objects**
+```
+public class CreateStudentDemo {
+
+	public static void main(String[] args) {
+		
+		// create session factory
+		SessionFactory factory = new Configuration()
+				.configure("hibernate.cfg.xml")
+				.addAnnotatedClass(Student.class)
+				.buildSessionFactory();
+		
+		// create session
+		Session session = factory.getCurrentSession();
+		
+		try {
+            // create a student object
+            System.out.println("creating a new student object ...");
+ 
+            String theDateOfBirthStr = "30/12/1998";
+ 
+            Date theDateOfBirth = DateUtils.parseDate(theDateOfBirthStr);
+ 
+            Student tempStudent = new Student("Pauly", "Doe", "paul@luv.com", theDateOfBirth);
+ 
+            // start transaction
+            session.beginTransaction();
+ 
+            // save the student object
+            System.out.println("Saving the student ...");
+            session.save(tempStudent);
+ 
+            // commit transaction
+            session.getTransaction().commit();
+ 
+            System.out.println("Success!");
+        } catch (Exception exc) {
+            exc.printStackTrace();
+        } finally {
+            factory.close();
+        }
+	}
+
+}
+```
+
+**Reading Objects with Hibernate**
+```
+// create session factory
+    ...
+// create session
+    ...
+    try 
+		{
+			String theDateOfBirthStr = "31/12/1998";
+			 
+            Date theDateOfBirth = DateUtils.parseDate(theDateOfBirthStr);
+            
+			// create a student object
+			Student tempStudent = new Student("Daffy", "Duck", "daffy@luv2code.com", theDateOfBirth);
+			
+			// start a transaction 
+			session.beginTransaction();
+			
+			// save the student object
+			session.save(tempStudent);
+			
+			// commit transaction
+			session.getTransaction().commit();
+		
+			// now get a new session and start transaction
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+			
+			// retrieve student based on the id: primary key
+			Student myStudent = session.get(Student.class, tempStudent.getId());
+			
+			// commit the transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		} catch (Exception exc) {
+            exc.printStackTrace();
+        } finally {
+            factory.close();
+        }
+```
+
+**Querying Objects with Hibernate**
+>
