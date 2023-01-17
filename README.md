@@ -249,4 +249,155 @@ public class CreateStudentDemo {
 ```
 
 **Querying Objects with Hibernate**
+>HQL( Hibernate Query Language) 是面向對象的查詢語言, 它和SQL 查詢語言有些相似. 在Hibernate 提供的各種檢索方式中, HQL 是使用最廣的一種檢索方式. 它有如下功能:
+>* 在查詢語句中設定各種查詢條件；
+>* 支持投影查詢, 即僅檢索出對象的部分屬性；
+>* 支持分頁查詢；
+>* 支持連接查詢；
+>* 支持分組查詢, 允許使用HAVING 和GROUP BY 關鍵字；
+>* 提供內置聚集函數, 如sum(), min() 和max()；
+>* 支持子查詢；
+>* 支持動態綁定參數；
+>* 能夠調用用戶定義的SQL 函數或標準的SQL 函數。
 >
+> **HQL vs SQL**
+>>HQL 查詢語句是面向對象的, Hibernate 負責解析HQL 查詢語句, 然後根據對象-關係映射文件中的映射信息, 把HQL 查詢語句翻譯成相應的SQL 語句。HQL 查詢語句中的主體是模型中的類及類的屬性。
+>>
+>>SQL 查詢語句是與關係數據庫綁定在一起的。SQL 查詢語句中的主體是數據庫表及表的字段。
+
+```
+public class QueryStudentDemo {
+
+	public static void main(String[] args) {
+		
+		// create session factory/session
+		...
+		
+		try 
+		{
+			// start a transaction 
+			session.beginTransaction();		
+			
+			// query students
+			List<Student> theStudents = session.createQuery("from Student").getResultList();
+			
+			// display the students
+			displayStudents(theStudents);
+			
+			// query students: lastName='Doe'
+			theStudents = session.createQuery("from Student s where s.lastName='Doe'").getResultList();
+			
+			// display the students
+			System.out.println("\n\nStudents who have last name of Doe");
+			displayStudents(theStudents);
+			
+			// query students: lastName='Doe' OR firstName='Daffy'
+			theStudents = session.createQuery("from Student s where"
+										+ " s.lastName='Doe' OR s.firstName='Daffy'").getResultList();
+			
+			System.out.println("\n\nStudents who have last name of DoeOR first name Daffy");
+			displayStudents(theStudents);
+			
+			// query students where email LIKE '%gmail.com'
+			theStudents = session.createQuery("from Student s where"
+					+ " s.email LIKE '%gmail.com'").getResultList();
+			
+			System.out.println("\n\nStudents whose email ends with gmail.com");
+			displayStudents(theStudents);
+			
+			// commit transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		} 
+		finally 
+		{
+			factory.close();
+		}
+	}
+
+	private static void displayStudents(List<Student> theStudents) {
+		for (Student tempStudent : theStudents) {
+			System.out.println(tempStudent);
+		}
+	}
+}
+```
+**Updating Objects with Hibernate**
+```
+public class UpdateStudentDemo {
+
+	public static void main(String[] args) {
+		
+		// create session factory / session
+		...
+
+		try 
+		{						
+			int studentId = 1;
+			
+			// now get a new session and start transaction
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+			
+			Student myStudent = session.get(Student.class, studentId);
+			
+			myStudent.setFirstName("Scooby");
+			
+			// commit the transaction
+			session.getTransaction().commit();
+			
+			// NEW CODE
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+		
+			session.createQuery("Update Student set email='foo@gmail.com'")
+				.executeUpdate();
+			
+			// commit the transaction
+			session.getTransaction().commit();
+		} 
+		finally 
+		{
+			factory.close();
+		}
+	}
+}
+```
+**Deleting Objects with Hibernate**
+```
+public class DeleteStudentDemo {
+
+	public static void main(String[] args) {
+		
+		// create session factory / session
+		...
+		
+		try 
+		{						
+			int studentId = 1;
+			
+			// now get a new session and start transaction
+			session = factory.getCurrentSession();
+			session.beginTransaction();
+			
+			Student myStudent = session.get(Student.class, studentId);
+			
+			// delete the student
+			// session.delete(myStudent);
+			
+			// delete student id=2
+			session.createQuery("delete from Student where id=2").executeUpdate();
+			
+			// commit the transaction
+			session.getTransaction().commit();
+			
+			System.out.println("Done!");
+		} 
+		finally 
+		{
+			factory.close();
+		}
+	}
+}
+```
